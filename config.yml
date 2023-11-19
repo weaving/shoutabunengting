@@ -1,0 +1,25 @@
+database:
+  lv1_list : [muludawang,  niumowang, huangzhong, machao, chenping, ]
+  lv2_list : [ xiaohe,liubang, zhurongfuren,]
+  lv3_list : [ lishimin, wuzetian,hanxin, ]
+  postion : [ 
+            muludawang: 0,
+            xiaohe: 1,
+            hanxin: 2,
+            niumowang: 3,
+            huangzhong: 4,
+            machao: 5,
+            chenping: 6,
+            liubang: 7,
+            zhurongfuren: 8,   
+            lishimin: 9,
+            wuzetian: 10,
+       ]
+  xinyuan_list : [ lishimin, xiaohe,muludawang, ]
+  tequan : 1
+  refresh_max : [6,6,6,6,10,10,10,40,50,9999,9999]
+
+ 
+logging:
+  level: info
+  filename: myapp.log
