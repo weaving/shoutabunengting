@@ -20,11 +20,13 @@ import psutil
 from aip import AipOcr
 from PIL import Image
 import cv2 as cv2
-
+import yaml
 
 
 class UniverseUtils:
     def __init__(self):
+
+
         self.my_nd = win32gui.GetForegroundWindow()
 
         self.debug = 0
@@ -42,6 +44,7 @@ class UniverseUtils:
         self.battle_success_cnt = 0 # 统计成功刷了几次
         self.qiwang_battle_cnt = 99#
         self.hun_needed = 0
+        self.beiT_cnt = 0
 
         self.name_readyToWork = '' # 要去准备干活的武将
         self.start_D_pai = 1 #默认值得是1 ，不然开始就不D排了
@@ -55,6 +58,19 @@ class UniverseUtils:
         self.shuaxin_wujiang_last = ['a', 'b', 'c', 'd']
         self.wujiang_recognize_cnt = 0
         self.refresh_cnt_max = [6,6,6,6,10,10,10,40,50,9999,9999]
+        self.wuqi = [ 'chailangshou', 'chuanxinjian', 'chumoshu', 'dawangfu', 'duochonggong', 'duolingqiang',
+                      'feihuadan', 'fengleibian', 'fulongsuo', 'fuxiqin', 'ganjiang', 'gongshouzhangu', 'guiguzi',
+                      'haimohaojiao', 'hairenchui', 'hanbingzhou', 'hongyijupao', 'huifengzhenfa', 'huimoxinfa',
+                      'huogongshu', 'jifengjian', 'jinshejian', 'jubaopeng', 'kaishanchui', 'kaitianfu', 'kongdongyin',
+                      'kongmozhu', 'kuangfengfu', 'kunxianshu', 'lihunchui', 'lingshoudan', 'lingyuanhaojiao', 'longlin',
+                      'lvshichunqiu', 'lvxing', 'miaofabaodian', 'mingdaotianzhu', 'mingleifazhang', 'moxie', 'nuguijian',
+                      'pingtianguan', 'pojianujian', 'pozhen', 'qiankunfu', 'qiankunshan', 'qumoling', 'sanshiliuji',
+                      'shamodao', 'shangjunshu', 'shaweibang', 'shishenling', 'suijinchui', 'sunzibingfa', 'taia', 'tianfajian',
+                      'tianhuhaojiao', 'tulong', 'tumozhoufa', 'wolongshan', 'wudelv', 'wuduhulu', 'wuguihulu', 'xiangmobaozhang',
+                      'xiangmoshu', 'xingtianfu', 'yangxinfa', 'yangxinshi', 'yinshejian', 'yinyangbian', 'yuanlingjian', 'yuchang',
+                      'yumobian', 'yumochui', 'yumofu', 'zhinangjing','baojunfu','daodejing','feiyanzhu',]
+
+
 
 
         hwnd = win32gui.GetForegroundWindow()  # 根据当前活动窗口获取句柄
@@ -89,7 +105,10 @@ class UniverseUtils:
         return f"./imgs/wujiang_xinyuan/{path}.png"
     def format_path_wujiang_share(self, path):
         return f"./imgs/wujiang_share/{path}.png"
-
+    def format_path_wuqi(self, path):
+        return f"./imgs/wuqi/{path}.png"
+    def format_path_qianghua(self, path):
+        return f"./imgs/qianghua/{path}.png"
 
     def changeWindow(self):
         # 先等待3秒
@@ -175,7 +194,10 @@ class UniverseUtils:
                 timw_now = time.time()
                 time_now = self.start_time - timw_now
                 log.info("出现隐藏界面的时间：%d", time_now)
-
+            if path == 'wozhidaole':
+                timw_now = time.time()
+                time_now = self.start_time - timw_now
+                log.info("我知道了界面时间：%d", time_now)
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
         return max_val > threshold
@@ -191,8 +213,11 @@ class UniverseUtils:
             log.info("%s not found",(path))
             return
         target = cv.imread(path)  # 字节数组直接转字符串，不解码
-
-        local_screen = self.get_local(550, 1500, 750, 1080)
+        x0 = 550
+        x1 = 1500
+        y0 = 750
+        y1 = 1080
+        local_screen = self.get_local(x0, x1, y0, y1)
 
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
@@ -200,9 +225,119 @@ class UniverseUtils:
         result = cv.matchTemplate(local_screen, target, cv.TM_CCORR_NORMED)
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
         if max_val > threshold:
-            log.info("匹配到bottom图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
-            self.location_bottom_x = max_loc[0] + 550
-            self.location_bottom_y = max_loc[1] + 750
+            log.debug("匹配到bottom图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
+            self.location_bottom_x = max_loc[0] + x0
+            self.location_bottom_y = max_loc[1] + y0
+        # cv.imshow("www",local_screen)
+        # cv.waitKey(0)
+        if max_val > threshold:
+            try:
+                log.debug(self.wujiang_recognize_cnt)
+            except:
+                log.error("err")
+
+
+        return max_val > threshold
+
+    def check_wuqi(self, path,pos=1, threshold=None):
+
+        if threshold is None:
+            threshold = self.threshold
+
+        path = self.format_path_wuqi(path)
+        if os.path.exists(path) == False:
+            log.info("%s not found", (path))
+            return
+        target = cv.imread(path)  # 字节数组直接转字符串，不解码
+        if pos == 1 :
+            x0 = 1200
+            x1 = 1300
+            y0 = 500
+            y1 = 600
+        if pos == 2 :
+            x0 = 1324
+            x1 = 1412
+            y0 = 500
+            y1 = 600
+        if pos == 3 :
+            x0 = 1434
+            x1 = 1521
+            y0 = 500
+            y1 = 600
+        if pos == 4 :
+            x0 = 1543
+            x1 = 1631
+            y0 = 500
+            y1 = 600
+        if pos == 5 :
+            x0 = 1200
+            x1 = 1300
+            y0 = 640
+            y1 = 728
+        if pos == 6 :
+            x0 = 1324
+            x1 = 1412
+            y0 = 640
+            y1 = 728
+        if pos == 7 :
+            x0 = 1434
+            x1 = 1521
+            y0 = 640
+            y1 = 728
+        if pos == 8 :
+            x0 = 1543
+            x1 = 1631
+            y0 = 640
+            y1 = 728
+        local_screen = self.get_local(x0,x1,y0,y1)
+
+        # cv.imshow("www",local_screen)
+        # cv.waitKey(0)
+
+        result = cv.matchTemplate(local_screen, target, cv.TM_CCORR_NORMED)
+        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
+        log.debug(max_val)
+        if max_val > threshold:
+            log.debug("匹配到wuqi图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
+            self.location_x = max_loc[0] + x0
+            self.location_y = max_loc[1] + y0
+        # cv.imshow("www",local_screen)
+        # cv.waitKey(0)
+        if max_val > threshold:
+            try:
+                log.debug(self.wujiang_recognize_cnt)
+            except:
+                log.error("err")
+
+        return max_val > threshold
+
+
+    def check_qianghua(self, path, threshold=None):
+
+        if threshold is None:
+            threshold = self.threshold
+
+        path = self.format_path_qianghua(path)
+        if os.path.exists(path) == False:
+            log.info("%s not found", (path))
+            return
+        target = cv.imread(path)  # 字节数组直接转字符串，不解码
+        x0=0
+        x1=1920
+        y0=0
+        y1 = 1080
+        local_screen = self.get_local(x0,x1,y0,y1)
+
+        # cv.imshow("www",local_screen)
+        # cv.waitKey(0)
+
+        result = cv.matchTemplate(local_screen, target, cv.TM_CCORR_NORMED)
+        min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
+        log.debug(max_val)
+        if max_val > threshold:
+            log.debug("匹配到wuqi图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
+            self.location_x = max_loc[0] + x0
+            self.location_y = max_loc[1] + y0
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
         if max_val > threshold:
@@ -225,8 +360,11 @@ class UniverseUtils:
             log.info("%s not found",(path))
             return
         target = cv.imread(path)  # 字节数组直接转字符串，不解码
-
-        local_screen = self.get_local(0, 1920, 350, 1080)
+        x0 = 0
+        x1 = 1920
+        y0 = 350
+        y1 = 1080
+        local_screen = self.get_local(x0, x1, y0 , y1)
 
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
@@ -234,9 +372,9 @@ class UniverseUtils:
         result = cv.matchTemplate(local_screen, target, cv.TM_CCORR_NORMED)
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
         if max_val > threshold:
-            log.info("匹配到bottom图片 %s 相似度 %f 阈值 %f,x:%d,y:%d" % (path, max_val, threshold,max_loc[0],max_loc[1]))
-            self.location_x = max_loc[0] + 0
-            self.location_y = max_loc[1] + 350
+            log.debug("匹配到xinyuan图片 %s 相似度 %f 阈值 %f,x:%d,y:%d" % (path, max_val, threshold,max_loc[0],max_loc[1]))
+            self.location_x = max_loc[0] + x0
+            self.location_y = max_loc[1] + y0
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
         if max_val > threshold:
@@ -259,8 +397,11 @@ class UniverseUtils:
             log.info("%s not found",(path))
             return
         target = cv.imread(path)  # 字节数组直接转字符串，不解码
-
-        local_screen = self.get_local(200, 1200, 500, 750)
+        x0 = 200
+        x1 = 1200
+        y0 = 500
+        y1 = 750
+        local_screen = self.get_local(x0, x1, y0, y1)
 
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
@@ -268,9 +409,9 @@ class UniverseUtils:
         result = cv.matchTemplate(local_screen, target, cv.TM_CCORR_NORMED)
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
         if max_val > threshold:
-            log.info("匹配到bottom图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
-            self.location_x = max_loc[0] + 200
-            self.location_y = max_loc[1] + 500
+            log.debug("匹配到bottom图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
+            self.location_x = max_loc[0] + x0
+            self.location_y = max_loc[1] + y0
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
         if max_val > threshold:
@@ -294,10 +435,17 @@ class UniverseUtils:
 
         shape = target.shape
         if self.tequan == 0:
-            local_screen = self.get_local(350, 1200, 350, 450)
+            x0 = 350
+            x1 = 1200
+            y0 = 350
+            y1 = 450
         if self.tequan == 1 :
-            local_screen = self.get_local(350, 1400, 350, 450)
+            x0 = 350
+            x1 = 1400
+            y0 = 350
+            y1 = 450
 
+        local_screen = self.get_local(x0, x1, y0, y1)
 
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
@@ -306,8 +454,8 @@ class UniverseUtils:
         min_val, max_val, min_loc, max_loc = cv.minMaxLoc(result)
         if max_val > threshold:
             log.debug("匹配到图片 %s 相似度 %f 阈值 %f" % (path, max_val, threshold))
-            self.location_x = max_loc[0] + 350
-            self.location_y = max_loc[1] + 350
+            self.location_x = max_loc[0] + x0
+            self.location_y = max_loc[1] + y0
         # cv.imshow("www",local_screen)
         # cv.waitKey(0)
         if max_val > threshold:
@@ -330,11 +478,13 @@ class UniverseUtils:
         return max_val > threshold
 
     def click(self, t=0):
-        if self._stop == 0:
-            win32api.SetCursorPos((self.location_x, self.location_y))
-            time.sleep(0.1)
-            pyautogui.click()
-
+        try:
+            if self._stop == 0:
+                win32api.SetCursorPos((self.location_x, self.location_y))
+                time.sleep(0.1)
+                pyautogui.click()
+        except:
+            log.error("click error")
         time.sleep(0.3)
         if self.debug == 0:
             time.sleep(t)
@@ -395,13 +545,56 @@ class UniverseUtils:
             self.shuaxin_wujiang_pos_idx = 2
         if tmp == min4:
             self.shuaxin_wujiang_pos_idx = 3
+
+        if self.buy_cnt[self.shuaxin_wujiang[0]] == 0 and \
+              self.shuaxin_wujiang[0] in list:
+            self.shuaxin_wujiang_pos_idx = 0
+
+        if self.buy_cnt[self.shuaxin_wujiang[1]] == 0 and \
+              self.shuaxin_wujiang[1] in list:
+            self.shuaxin_wujiang_pos_idx = 1
+
+        if self.buy_cnt[self.shuaxin_wujiang[2]] == 0 and \
+              self.shuaxin_wujiang[2] in list:
+            self.shuaxin_wujiang_pos_idx = 2
+
+        try:
+            if self.buy_cnt[self.shuaxin_wujiang[3]] == 0 :
+                if self.shuaxin_wujiang[3] in list:
+                    self.shuaxin_wujiang_pos_idx = 3
+        except:
+            log.debug("没有这个武将")
+
         if tmp != 100:
-            self.name_readyToWork = list[tmp]
+            self.name_readyToWork = self.shuaxin_wujiang[self.shuaxin_wujiang_pos_idx]
             log.info("战斗阶段:%d,找到了优先级武将 :%s,优先级:%d", self.battle_phase, self.name_readyToWork, tmp)
         else:
             log.info("战斗阶段:%d,没有找到优先级武将 :%s,优先级:%d", self.battle_phase, self.name_readyToWork, tmp)
 
-    def drag(self, abs_pos):
+    def drag_quick(self, abs_pos):
+        self.location_x = self.location_bottom_x+30  # 武將位置
+        self.location_y = self.location_bottom_y-30
+        win32api.SetCursorPos((self.location_x, self.location_y))
+        time.sleep(0.2)
+        des_x = abs_pos[0]
+        des_y = abs_pos[1]
+        log.info("拖动出发地 --- 目的地 org_x:%d,org_y:%d, des_x:%d,des_y:%d",self.location_x,self.location_y,des_x,des_y)
+        if self.location_x >= des_x and (self.location_x - des_x) < 20:
+            des_x = abs_pos[0] - 20
+        if self.location_y >= des_y and (self.location_y - des_y) < 20:
+            des_y = abs_pos[1] - 20
+
+        if self.location_x <= des_x and (des_x - self.location_x ) < 20:
+            des_x = abs_pos[0] + 20
+        if self.location_y <= des_y and (des_y - self.location_y ) < 20:
+            des_y = abs_pos[1] + 20
+
+
+        log.info("拖动出发地优化后 --- 目的地 org_x:%d,org_y:%d, des_x:%d,des_y:%d",self.location_x,self.location_y,des_x,des_y)
+
+        pyautogui.dragTo(des_x, des_y, 1, button='left')  # 按住鼠标左键，用0.5s将鼠标拖拽至1230，458
+
+    def drag_safe(self, abs_pos):
         timeout = 25
         while timeout>1:
             self.all_tiaozhan()
@@ -493,6 +686,7 @@ class UniverseUtils:
         self.start_time = time.time()
         self.end_time = 0
         self.run_time = 0
+        self.last_time = 0
         self.run_time_last = 0
         self.refresh_cnt = 0  # 用来统计刷新次数
         self.renkou_cur = 0
@@ -511,9 +705,17 @@ class UniverseUtils:
         self.drag_zhuangbei_flag2 = 0
         self.drag_zhuangbei_flag3 = 0
         self.number_hun_max = 0
+        self.expect_flag = 0       #期望能否战斗胜利
+        self.yijianronghe_cnt = 1 # 统计融合次数
+        self.touxiang_cnt = 0
+        self.jinbichongneng_state = 0
         for i in range(len(self.wujiang_all_list)):
             self.dict_lv[self.wujiang_all_list[i]] = 1
 
+        self.dict_wuqi = {}
+
+        for i in range(len(self.wujiang_all_list)):
+            self.dict_wuqi[self.wujiang_all_list[i]] = 0
         self.buy_cnt = {}
 
         for i in range(len(self.wujiang_all_list)):
@@ -524,13 +726,6 @@ class UniverseUtils:
         self.four_huang_list_done = 0
         self.final_list_done = 0
 
-        # self.lv1_list = ['muludawang',  'niumowang', 'huangzhong', 'machao', 'chenping', ]
-        # self.lv1_list_final = ['muludawang',  'chenping', ]
-        # self.lv2_list = [ 'xiaohe', 'sunce', 'baiqi', 'liubang', 'zhurongfuren', ]
-        # self.lv2_list_final = ['xiaohe', 'liubang', ]
-        # self.lv3_list = ['nvwa', 'mozi', 'lishimin', 'zhouyu', 'zhugeliang', 'pangu', 'sunwukong', 'xiangyu',
-        #                               'zhaoyun', 'lvbu', 'hanxin', 'wuzetian', 'guanyu', ]
-        # self.lv3_list_final = [ 'lishimin', 'wuzetian','hanxin', ]
 
         self.battle_phase_lv1_list = []
         self.battle_phase_lv1_list.extend(self.lv3_list)
@@ -562,12 +757,22 @@ class UniverseUtils:
         self.battle_success_flag = 0
         self.exit_game_flag = 0
 
+
+        with open('config.yml', 'r') as f:
+            config = yaml.load(f, Loader=yaml.FullLoader)
+
+        for i in range(len(self.battle_phase_lv1_list)):
+            try :
+                tmp = self.battle_phase_lv1_list[i] + "_wuqi" # lishimin_wuqi
+                self.wujiang_wuqi[self.battle_phase_lv1_list[i]] = config['database'][tmp]
+            except:
+                1
     def sub_data_init(self):
         self.end_time = time.time()
         self.run_time = self.end_time - self.start_time
         if int(self.run_time - self.run_time_last) > 20:
-            log.info("当前成功刷了%d/%d次,当前验证码识别次数:%d,当前运行时间 :%ds,预计结束时间,:%ds,当前人口 :%d/%d, 当前战斗阶段:%d",
-                     self.battle_success_cnt,self.battle_cnt,self.verify_cnt, self.run_time,(2160-int(self.run_time)),self.renkou_cur,self.number_renkou_max,self.battle_phase)
+            log.info("当前成功刷了%d/%d次,投降%d次,被T次数统计%d,当前验证码识别次数:%d,当前运行时间 :%ds,预计结束时间,:%ds,当前人口 :%d/%d, 当前战斗阶段:%d",
+                     self.battle_success_cnt,self.battle_cnt,self.touxiang_cnt,self.beiT_cnt,self.verify_cnt, self.run_time,(2160-int(self.run_time)),self.renkou_cur,self.number_renkou_max,self.battle_phase)
             self.run_time_last = self.run_time
         
         if self.run_time > 31*60 and self.battle_success_flag == 0:
@@ -693,12 +898,12 @@ class UniverseUtils:
             self.click()
         # self.start_D_pai = 1
     def update_hun(self,ii=1):#升级人口后 就得D牌了
-        self.checkAndClick('yincang', 400, 960, 540, self.screen_max_y)
-        self.location_x = 1600
-        self.location_y = 750
-        for i in range(ii):
-            self.click()
-            log.debug("点了升级魂%d次",i)
+        if self.jinbichongneng_state == 1:
+            self.location_x = 1600
+            self.location_y = 750
+            for i in range(ii):
+                self.click()
+                log.debug("点了升级魂%d次",i)
 
 
     def check_money(self ):
@@ -760,10 +965,10 @@ class UniverseUtils:
     def check_more(self,name,loop_cnt=1):
         exist_shengji = 0
         for i in range(loop_cnt):
-            if self.check(name,0, 1920, 500, 1080):
+            if self.check(name,400, 1500, 600, 1080):
                 exist_shengji = 1
                 break
-            time.sleep(0.5)
+            # time.sleep(0.2)
             self.get_screen()
             self.yincang_D_pai()
 
@@ -771,8 +976,12 @@ class UniverseUtils:
 
     def checkAndClick(self,name,x0=0,x1=1920,y0=0,y1=1080,t=0):
         if self.check(name,x0,x1,y0,y1):
+            if name == "yincang":
+                run_time = time.time()-self.start_time
+                log.info("run_time:%d",run_time)
             self.click(t)
-
+            return 1
+        return 0
 
     def SystemInit(self):
         self.changeWindow() # 切换到游戏界面
@@ -839,6 +1048,24 @@ class UniverseUtils:
         pyautogui.dragTo(des_x, des_y, 1.5, button='left')  # 按住鼠标左键，用0.5s将鼠标拖拽至1230，458
         pyautogui.mouseUp()
 
+    def drag_wuqi(self,abs_pos):
+        self.get_screen()
+        self.checkAndClick('yincang', 0, 960, 540, self.screen_max_y)
+        if self.check('wozhidaole', 0, 700, 700, 1080):
+            self.location_y = self.location_y + 30
+            self.click()
+        win32api.SetCursorPos((self.location_x, self.location_y))
+        pyautogui.mouseDown() # 选中装备
+        time.sleep(0.3)
+        des_x = abs_pos[0]
+        des_y = abs_pos[1]
+        pyautogui.dragTo(des_x, des_y, 2, button='left')  # 按住鼠标左键，用0.5s将鼠标拖拽至1230，458
+        # pyautogui.mouseUp()
+        time.sleep(0.5)
+        self.get_screen()
+        if self.check("chushouyingxiong", 100, 400, 800, 1000):
+            self.yincang_D_pai()
+
     def wait_for_next_phase(self): # 当前阶段任务完成，等待魂够了升级下一次阶段，并打开D_PAI 标志
         timeout = 60
 
@@ -854,35 +1081,35 @@ class UniverseUtils:
                 self.battle_phase = 1
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 16 and self.number_renkou_max == (4+self.ziyuan):
+            if self.number_hun_max == 12 and self.number_renkou_max == (4+self.ziyuan):
                 self.battle_phase = 2
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 20 and self.number_renkou_max == (5+self.ziyuan):
+            if self.number_hun_max == 16 and self.number_renkou_max == (5+self.ziyuan):
                 self.battle_phase = 3
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 28 and self.number_renkou_max == (7+self.ziyuan):
+            if self.number_hun_max == 22 and self.number_renkou_max == (7+self.ziyuan):
                 self.battle_phase = 4
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 34 and self.number_renkou_max == (9+self.ziyuan):
+            if self.number_hun_max == 30 and self.number_renkou_max == (9+self.ziyuan):
                 self.battle_phase = 5
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 40 and self.number_renkou_max == (11+self.ziyuan):
+            if self.number_hun_max == 50 and self.number_renkou_max == (11+self.ziyuan):
                 self.battle_phase = 6
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 50 and self.number_renkou_max == (13+self.ziyuan):
+            if self.number_hun_max == 60 and self.number_renkou_max == (13+self.ziyuan):
                 self.battle_phase = 7
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 56 and self.number_renkou_max == (15+self.ziyuan):
+            if self.number_hun_max == 66 and self.number_renkou_max == (15+self.ziyuan):
                 self.battle_phase = 8
                 log.debug("人口是合法的")
                 break
-            if self.number_hun_max == 60 and self.number_renkou_max == (17+self.ziyuan):
+            if self.number_hun_max == 72 and self.number_renkou_max == (17+self.ziyuan):
                 self.battle_phase = 9
                 log.debug("人口是合法的")
                 break
@@ -890,8 +1117,45 @@ class UniverseUtils:
                 self.battle_phase = 10
                 log.debug("人口是合法的")
                 break
+            if self.number_renkou_max == 21:
+                self.battle_phase = 11
+                log.debug("人口是合法的")
+                break
             if self.number_renkou_max == (21+self.ziyuan):
                 self.battle_phase = 11
+                log.debug("人口是合法的")
+                break
+
+            if self.number_hun_max == 16 and self.number_renkou_max == 4:
+                self.battle_phase = 2
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 20 and self.number_renkou_max == 5:
+                self.battle_phase = 3
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 28 and self.number_renkou_max == 7:
+                self.battle_phase = 4
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 34 and self.number_renkou_max == 9:
+                self.battle_phase = 5
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 40 and self.number_renkou_max == 11:
+                self.battle_phase = 6
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 50 and self.number_renkou_max == 13:
+                self.battle_phase = 7
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 56 and self.number_renkou_max == 15:
+                self.battle_phase = 8
+                log.debug("人口是合法的")
+                break
+            if self.number_hun_max == 60 and self.number_renkou_max == 17:
+                self.battle_phase = 9
                 log.debug("人口是合法的")
                 break
 
@@ -933,114 +1197,122 @@ class UniverseUtils:
 
 
     def killM4DEAD(self):
-
-        pids = psutil.pids()
-        for pid in pids:
-            p = psutil.Process(pid)
-            # get process name according to pid
-            process_name = p.name()
-            # kill process "sleep_test1"
-            if 'M4DEAD.exe' == process_name:
-                print("kill specific process: name(%s)-pid(%s)" % (process_name, pid))
-                process = psutil.Process(pid)
-                process.terminate()
+        try:
+            pids = psutil.pids()
+            for pid in pids:
+                p = psutil.Process(pid)
+                # get process name according to pid
+                process_name = p.name()
+                # kill process "sleep_test1"
+                if 'M4DEAD.exe' == process_name:
+                    print("kill specific process: name(%s)-pid(%s)" % (process_name, pid))
+                    process = psutil.Process(pid)
+                    process.terminate()
+        except:
+            log.error("kill M4 DEAD fail")
 
     def verifyCode(self):
-        1
-        # self.get_screen()
-        # if self.check("zaixianyanzheng") and self.verify_cnt < 100:
-        #     log.info("在线验证")
-        #     x0 = self.location_x - 250
-        #     y0 = self.location_y + 100
-        #
-        #     try:
-        #         screen_raw = pyautogui.screenshot(region=[x0, y0, 320, 100])
-        #         screen_raw.save("screenshot.png")
-        #         log.info("保存验证码")
-        #         # client = AipOcr("42731625", "v6FF9Gx1DAGlR5tRliDT78CH", "bTvGkdfehbgzyU1aP6b4mRChX2D10v6r") # gzz
-        #         client = AipOcr("43012049", "VGVC4yWdPUT4nQO0wGpYq1Ys", "lX4u2bC8PevBEqSaDBdt7sNppnlOeEt4") # fei
-        #
-        #
-        #         # 灰度
-        #         gray = cv2.imread('screenshot.png', cv2.IMREAD_GRAYSCALE)
-        #         cv2.imwrite('out.jpg', gray)
-        #         with open('out.jpg', 'rb') as f:
-        #             content = f.read()
-        #             # 识别图片
-        #             #     result = client.accurate(content)
-        #             #     print(result)
-        #             result2 = client.basicAccurate(content)
-        #             print(result2)
-        #
-        #             tmp = result2['words_result']   ### # 刷洗数据
-        #             tmp = str(tmp).replace("{", '')
-        #             tmp = str(tmp).replace("}", '')
-        #             tmp = str(tmp).replace("'", '')
-        #             tmp = str(tmp).replace("words", '')
-        #             tmp = str(tmp).replace(":", '')
-        #             tmp = str(tmp).replace(" ", '')
-        #             tmp = str(tmp).replace("[", '')
-        #             tmp = str(tmp).replace("]", '')
-        #             tmp = str(tmp).replace(",", '') ### # 刷洗数据
-        #             # 1. 6* 8 , "6乘8"
-        #
-        #             # 找到乘以后 找出数据并计算
-        #             if '乘' in str(tmp):
-        #                 tmp = tmp.split("乘")
-        #                 data0 = self.transNumber(str(tmp[0]))
-        #                 data1 = self.transNumber(str(tmp[1]))
-        #                 result = int(data0) * int(data1)
-        #                 log.info("验证码 :%d * %d = %d",data0,data1,result)
-        #
-        #             if '减' in str(tmp):
-        #                 tmp = tmp.split("减")
-        #                 data0 = self.transNumber(str(tmp[0]))
-        #                 data1 = self.transNumber(str(tmp[1]))
-        #                 result = int(data0) - int(data1)
-        #                 log.info("验证码 :%d - %d = %d",data0,data1,result)
-        #
-        #             if '加' in str(tmp):
-        #                 tmp = tmp.split("加")
-        #                 data0 = self.transNumber(str(tmp[0]))
-        #                 data1 = self.transNumber(str(tmp[1]))
-        #                 log.info("data0,data1, %d,%d",data0,data1)
-        #                 result = int(data0) + int(data1)
-        #
-        #                 log.info("验证码 :%d + %d = %d",data0,data1,result)
-        #
-        #             if '除' in str(tmp):
-        #                 tmp = tmp.split("除")
-        #                 data0 = self.transNumber(str(tmp[0]))
-        #                 data1 = self.transNumber(str(tmp[1]))
-        #                 result = int(data0) / int(data1)
-        #                 log.info("验证码 :%d / %d = %d",data0,data1,result)
-        #
-        #             ### 根据计算结果输入
-        #             baiwei = math.floor(result / 100)
-        #             shiwei = math.floor(result / 10)
-        #             gewei = result % 10
-        #
-        #
-        #             self.checkAndClick("shuru")
-        #             if baiwei != 0:
-        #                 self.press(str(baiwei))
-        #                 log.info("按下百位:%d",baiwei)
-        #             if baiwei == 0 and shiwei == 0:
-        #                 log.info("只有个位，不按十位")
-        #             else:
-        #                 self.press(str(shiwei))
-        #                 log.info("按下十位:%d",shiwei)
-        #
-        #             self.press(str(gewei))
-        #             log.info("按下个位:%d", gewei)
-        #             self.verify_cnt = self.verify_cnt + 1
-        #
-        #             self.checkAndClick('queding')
-        #             self.checkAndClick('queding2')
-        #     except:
-        #         print("截图失败!")
-        #         time.sleep(0.1)
-        # self.get_screen()
+
+        self.get_screen()
+        if self.check("zaixianyanzheng") and self.verify_cnt < 100:
+            log.info("在线验证")
+            x0 = self.location_x - 250
+            y0 = self.location_y + 100
+
+            try:
+                screen_raw = pyautogui.screenshot(region=[x0, y0, 320, 100])
+                screen_raw.save("screenshot.png")
+                log.info("保存验证码")
+                # client = AipOcr("42731625", "v6FF9Gx1DAGlR5tRliDT78CH", "bTvGkdfehbgzyU1aP6b4mRChX2D10v6r") # gzz
+                client = AipOcr(self.AppID, self.APIKey, self.SecretKey) # fei
+
+                # 灰度
+                gray = cv2.imread('screenshot.png', cv2.IMREAD_GRAYSCALE)
+                cv2.imwrite('out.jpg', gray)
+                with open('out.jpg', 'rb') as f:
+                    content = f.read()
+                    # 识别图片
+                    #     result = client.accurate(content)
+                    #     print(result)
+                    result2 = client.basicAccurate(content)
+                    log.info(result2)
+
+                    tmp = result2['words_result']   ### # 刷洗数据
+                    tmp = str(tmp).replace("{", '')
+                    tmp = str(tmp).replace("}", '')
+                    tmp = str(tmp).replace("'", '')
+                    tmp = str(tmp).replace("words", '')
+                    tmp = str(tmp).replace(":", '')
+                    tmp = str(tmp).replace(" ", '')
+                    tmp = str(tmp).replace("[", '')
+                    tmp = str(tmp).replace("]", '')
+                    tmp = str(tmp).replace(",", '') ### # 刷洗数据
+                    # 1. 6* 8 , "6乘8"
+
+                    # 找到乘以后 找出数据并计算
+                    if '乘' in str(tmp):
+                        tmp = tmp.split("乘")
+                        data0 = self.transNumber(str(tmp[0]))
+                        data1 = self.transNumber(str(tmp[1]))
+                        result = int(data0) * int(data1)
+                        log.info("验证码 :%d * %d = %d",data0,data1,result)
+
+                    if '减' in str(tmp):
+                        tmp = tmp.split("减")
+                        data0 = self.transNumber(str(tmp[0]))
+                        data1 = self.transNumber(str(tmp[1]))
+                        result = int(data0) - int(data1)
+                        log.info("验证码 :%d - %d = %d",data0,data1,result)
+
+                    if '滅' in str(tmp):
+                        tmp = tmp.split("滅")
+                        data0 = self.transNumber(str(tmp[0]))
+                        data1 = self.transNumber(str(tmp[1]))
+                        result = int(data0) - int(data1)
+                        log.info("验证码 :%d - %d = %d",data0,data1,result)
+
+                    if '加' in str(tmp):
+                        tmp = tmp.split("加")
+                        data0 = self.transNumber(str(tmp[0]))
+                        data1 = self.transNumber(str(tmp[1]))
+                        log.info("data0,data1, %d,%d",data0,data1)
+                        result = int(data0) + int(data1)
+
+                        log.info("验证码 :%d + %d = %d",data0,data1,result)
+
+                    if '除' in str(tmp):
+                        tmp = tmp.split("除")
+                        data0 = self.transNumber(str(tmp[0]))
+                        data1 = self.transNumber(str(tmp[1]))
+                        result = int(data0) / int(data1)
+                        log.info("验证码 :%d / %d = %d",data0,data1,result)
+
+                    ### 根据计算结果输入
+                    baiwei = math.floor(result / 100)
+                    shiwei = math.floor(result / 10)
+                    gewei = result % 10
+
+
+                    self.checkAndClick("shuru")
+                    if baiwei != 0:
+                        self.press(str(baiwei))
+                        log.info("按下百位:%d",baiwei)
+                    if baiwei == 0 and shiwei == 0:
+                        log.info("只有个位，不按十位")
+                    else:
+                        self.press(str(shiwei))
+                        log.info("按下十位:%d",shiwei)
+
+                    self.press(str(gewei))
+                    log.info("按下个位:%d", gewei)
+                    self.verify_cnt = self.verify_cnt + 1
+
+                    self.checkAndClick('queding')
+                    self.checkAndClick('queding2')
+            except:
+                print("截图失败!")
+                time.sleep(0.1)
+        self.get_screen()
 
     def transNumber(self,str2):
         return_val = 0
@@ -1070,6 +1342,8 @@ class UniverseUtils:
         return return_val
 
     def judge_exit_game(self):
+
+
         self.get_screen()
         if self.check("yingxiongshengji", 0, 1920, 0, 270) \
                 or self.check("jinbi") \
@@ -1087,6 +1361,13 @@ class UniverseUtils:
             self.click(2)
             self.exit_game_flag = 1
 
+        if self.check("fanhuifangjian2"):
+            self.click(2)
+            time.sleep(10)
+            self.get_screen()
+            self.verifyCode()
+            self.exit_game_flag = 1
+
     def init_xinyuan(self):
 
         self.checkAndClick("xinyuan",0,130,600,700)
@@ -1095,24 +1376,24 @@ class UniverseUtils:
             if name in self.lv1_list_raw:
                 self.location_x = 1540  # 选择
                 self.location_y = 322
-                self.click(0.3)
+                self.click()
                 self.location_x = 1540  # 史诗
                 self.location_y = 568
                 self.click()
             if name in self.lv2_list_raw:
                 self.location_x = 1540  # 选择
                 self.location_y = 322
-                self.click(0.3)
+                self.click()
                 self.location_x = 1540  # 史诗
                 self.location_y = 515
                 self.click()
             if name in self.lv3_list_raw:
                 self.location_x = 1540  # 选择
                 self.location_y = 322
-                self.click(0.3)
+                self.click()
                 self.location_x = 1540  # 传说
                 self.location_y = 468
-                self.click(0.3)
+                self.click()
 
             self.check_wujiang_xinyuan(name)
 
@@ -1122,34 +1403,31 @@ class UniverseUtils:
     def share_zhuangbei(self):
         self.checkAndClick('yincang', 0, 960, 540, self.screen_max_y)
         self.checkAndClick('beibao', 1550, 1650, 900, 950)
-        self.checkAndClick('hechengronglian', 1500, 1700, 760, 900)
-        time.sleep(0.2)
-        for k in range(3):
-            self.checkAndClick('yijianquanxuan')
-            time.sleep(0.2)
-            self.checkAndClick('hecheng')
-            time.sleep(0.2)
-            self.location_x = 1032  # 合完guanbi
-            self.location_y = 686
-            self.click(0.1)
-
-
-        self.location_x = 1529 #合完guanbi
-        self.location_y = 64
-        self.click(0.1)
+        # self.checkAndClick('hechengronglian', 1500, 1700, 760, 900)
+        # time.sleep(0.2)
+        # for k in range(2):
+        #     self.checkAndClick('yijianquanxuan')
+        #     time.sleep(0.2)
+        #     self.checkAndClick('hecheng')
+        #     time.sleep(0.2)
+        #     self.location_x = 1032  # 合完guanbi
+        #     self.location_y = 686
+        #     self.click(0.1)
+        #
+        #
+        # self.location_x = 1529 #合完guanbi
+        # self.location_y = 64
+        # self.click(0.1)
         self.location_x = 68  # 点击分享
         self.location_y = 850
         self.click(0.1)
-        for k in range(4):   #分享4次
+        for k in range(2):   #分享4次
             self.location_x = 1262
             self.location_y = 549
             self.click()
         self.yincang_D_pai() # 返回
-        self.yincang_D_pai() # 返回
-        self.yincang_D_pai() # 返回
 
     def parseConfig(self):
-        import yaml
 
         with open('config.yml', 'r') as f:
             config = yaml.load(f, Loader=yaml.FullLoader)
@@ -1162,10 +1440,279 @@ class UniverseUtils:
         self.lv1_list = lv1_list
         self.lv2_list = lv2_list
         self.lv3_list = lv3_list
+        self.battle_phase_lv1_list = []
+        self.battle_phase_lv1_list.extend(self.lv3_list)
+        self.battle_phase_lv1_list.extend(self.lv2_list)
+        self.battle_phase_lv1_list.extend(self.lv1_list)
 
         self.dict_pos_default = config['database']['postion']
 
         self.xinyuan_list = config['database']['xinyuan_list']
         self.tequan = config['database']['tequan']
         self.ziyuan = config['database']['ziyuan']
+        self.touxiang_en = config['database']['touxiang']
+
+
         self.refresh_cnt_max = config['database']['refresh_max']
+
+        self.AppID = config['database']['AppID']
+        self.APIKey = config['database']['APIKey']
+        self.SecretKey = config['database']['SecretKey']
+
+        self.qianghua_list = config['database']['qianghua_list']
+
+        self.wujiang_wuqi = {}
+        for i in range(len(self.wujiang_all_list)):
+            self.wujiang_wuqi[self.wujiang_all_list[i]] = []
+
+
+        for i in range(len(self.battle_phase_lv1_list)):
+            try :
+                tmp = self.battle_phase_lv1_list[i] + "_wuqi" # lishimin_wuqi
+                self.wujiang_wuqi[self.battle_phase_lv1_list[i]] = config['database'][tmp]
+                log.info("找到武将 %s 的武器:%s", self.battle_phase_lv1_list[i],self.wujiang_wuqi[self.battle_phase_lv1_list[i]])
+            except:
+                log.info("没有找到武将 %s 的武器",self.battle_phase_lv1_list[i])
+
+    #     self.AppID
+    # self.battle_phase_lv1_list
+
+
+    def wuqi_process(self):
+        self.yincang_D_pai()
+        self.checkAndClick('beibao', 1550, 1650, 900, 950)
+        time.sleep(0.2)
+        drag_wuqi_flag = 0
+
+        for wuqi_idx in range(1, 9, 1):
+
+            self.get_screen()
+            for i in range(len(self.wuqi)):
+                wuqi_name = self.wuqi[i]
+                # log.info("wuqi_idx:%d",wuqi_idx)
+                if self.check_wuqi(wuqi_name, wuqi_idx, 0.98):  # 识别是什么装备
+                    log.debug("识别到位置 %d, 装备 :%s", wuqi_idx, wuqi_name)
+                    # wujiang_name = 'lishimin'
+                    wuqi_name_list = self.battle_phase_lv1_list
+                    for wujiang_name in wuqi_name_list:
+                        if wujiang_name in self.lv1_list_raw:
+                            extra_gezi = 0
+                            gezi_limit = 3
+                        if wujiang_name in self.lv2_list_raw:
+                            extra_gezi = 1
+                            gezi_limit = 4
+                        if wujiang_name in self.lv3_list_raw:
+                            extra_gezi = 2
+                            gezi_limit = 6
+                        wujiang_wuqi_list =  self.wujiang_wuqi[wujiang_name]
+
+                        if (wuqi_name in wujiang_wuqi_list) and self.buy_cnt[wujiang_name] > 0:
+                            gezishu = int(self.dict_lv[wujiang_name]) + extra_gezi
+                            if gezishu > gezi_limit:
+                                gezishu = gezi_limit
+                            log.info("这是%s的装备,格子%d/%d", wujiang_name, self.dict_wuqi[wujiang_name], gezishu)
+
+                            if self.dict_wuqi[wujiang_name] < gezishu:
+                                tmp_pos_idx = int(self.dict_pos_use[wujiang_name])
+                                log.info("tmp_pos_idx:%d", tmp_pos_idx)
+                                log.info("self.abs_pos[tmp_pos_idx]:%s", self.abs_pos[tmp_pos_idx])
+                                self.check_wuqi(wuqi_name, wuqi_idx, 0.98)
+                                self.drag_wuqi(self.abs_pos[tmp_pos_idx])
+                                self.dict_wuqi[wujiang_name] = self.dict_wuqi[wujiang_name] + 1
+                                idx = wujiang_wuqi_list.index(wuqi_name)
+                                wujiang_wuqi_list.pop(idx)
+                                drag_wuqi_flag = 1
+                                break
+            if drag_wuqi_flag:
+                break
+        self.yincang_D_pai()
+        return drag_wuqi_flag
+
+    def yijianronghe_judge(self):
+        self.yincang_D_pai()
+        self.checkAndClick('beibao', 1550, 1650, 900, 950)
+        time.sleep(0.5)
+
+        for wuqi_idx in range(1, 9, 1):
+            self.get_screen()
+            for i in range(len(self.wuqi)):
+                wuqi_name = self.wuqi[i]
+                # log.info("wuqi_idx:%d",wuqi_idx)
+                if self.check_wuqi(wuqi_name, wuqi_idx, 0.98):  # 识别是什么装备
+                    log.debug("识别到位置 %d, 装备 :%s", wuqi_idx, wuqi_name)
+                    # wujiang_name = 'lishimin'
+                    wuqi_name_list = self.battle_phase_lv1_list
+                    for wujiang_name in wuqi_name_list:
+
+                        wujiang_wuqi_list =  self.wujiang_wuqi[wujiang_name]
+
+                        if wuqi_name in wujiang_wuqi_list:
+                            log.info("有大佬装备，不建议一键融合")
+                            self.yincang_D_pai()
+
+                            return 0
+
+        self.yincang_D_pai()
+        log.info("可以一键融合")
+        return 1
+
+    def yijianronghe(self):
+        self.checkAndClick('yincang', 0, 960, 540, self.screen_max_y)
+        self.yincang_D_pai()  # 返回
+        self.checkAndClick('beibao', 1550, 1650, 900, 950)
+        self.checkAndClick('hechengronglian', 1500, 1700, 760, 900)
+        time.sleep(0.2)
+        self.checkAndClick('yijianquanxuan')
+        time.sleep(0.2)
+        if self.checkAndClick('hecheng'):
+            time.sleep(0.2)
+            self.location_x = 1032  # 合完guanbi
+            self.location_y = 686
+            self.click(0.1)
+        self.yincang_D_pai()  # 返回
+        log.info("yijianronghe")
+
+    def share_wujiang(self):
+        if self.check('duiyouxuyao', 450, 1250, 0, 540, 0.98):
+            if self.location_x > 450 and self.location_x < 750:
+                self.location_x = 525
+                self.location_y = 450
+            if self.location_x > 750 and self.location_x < 1000:
+                self.location_x = 802
+                self.location_y = 450
+            if self.location_x > 1000 and self.location_x < 1250:
+                self.location_x = 1084
+                self.location_y = 450
+            self.click(5)
+
+    def touxiang(self):
+        self.yincang_D_pai()
+        self.location_x = 1768
+        self.location_y = 63
+        self.click()
+        self.location_x = 1078
+        self.location_y = 913
+        self.click()
+        self.location_x = 885
+        self.location_y = 648
+        self.click()
+
+    def expect_result(self):
+        touxiang_cnt = 0
+
+        while touxiang_cnt != 10:
+            tequan_cnt = 0
+            ziyuan_cnt = 0
+            tequan_cnt = tequan_cnt + self.check("tequan_battle", 1370, 1480, 170, 240)
+            tequan_cnt = tequan_cnt + self.check("tequan_battle", 1480, 1630, 170, 240)
+            tequan_cnt = tequan_cnt + self.check("tequan_battle", 1630, 1750, 170, 240)
+            tequan_cnt = tequan_cnt + self.check("tequan_battle", 1750, 1920, 170, 240)
+
+            ziyuan_cnt = ziyuan_cnt + self.check("ziyuan_battle", 1370, 1480, 170, 240)
+            ziyuan_cnt = ziyuan_cnt + self.check("ziyuan_battle", 1480, 1630, 170, 240)
+            ziyuan_cnt = ziyuan_cnt + self.check("ziyuan_battle", 1630, 1750, 170, 240)
+            ziyuan_cnt = ziyuan_cnt + self.check("ziyuan_battle", 1750, 1920, 170, 240)
+
+            if tequan_cnt > 1 or ziyuan_cnt > 1:
+                log.info("这场战斗可能可以到60波, tequan_cnt:%d,ziyuan_cnt:%d", tequan_cnt, ziyuan_cnt)
+                return
+            else:
+
+                touxiang_cnt = touxiang_cnt + 1
+                time.sleep(0.9)
+                self.get_screen()
+
+        if True:
+            self.touxiang()
+            self.touxiang_cnt = self.touxiang_cnt + 1
+            log.info("这场战斗可能不可以到60波, tequan_cnt:%d,ziyuan_cnt:%d", tequan_cnt, ziyuan_cnt)
+
+    def yincang_D_pai(self, loop=2):
+
+        for i in range(loop):
+            self.location_x = 1538
+            self.location_y = 38
+            self.click()  # 这里点一下隐藏购买武将界面
+
+    def jinbichongneng(self):
+        if self.check('jinbichongneng', 1700, 1800, 590, 650) or self.check('jinbichongneng2', 1700, 1800, 590, 650):
+            self.jinbichongneng_state = 1
+        else:
+            self.location_x = 1800
+            self.location_y = 550
+            self.click()
+            self.location_x = 1180
+            self.location_y = 80
+            self.click()
+            self.location_x = 1300
+            self.location_y = 650
+            self.click()
+            self.location_x = 1400
+            self.location_y = 800
+            self.click()
+            self.jinbichongneng_state = 0
+            self.yincang_D_pai()
+
+    def xinyuan_process(self):
+        xinyuan_list = self.battle_phase_lv1_list
+        for i in range(len(xinyuan_list)):
+            name = xinyuan_list[i]
+            while self.check_wujiang_share(name):
+                if self.buy_cnt[name] == 0 or \
+                        (self.buy_cnt[name] > 0 and self.dict_lv[
+                            name] < 5 and self.battle_phase >= 6):  # and self.battle_phase < 10 : # 只会购买一次
+                    self.click()
+                    self.yincang_D_pai()  # 万一一分享就取消 导致我点到武将上
+                    if self.check_wujiang_bottom(name):  # 判断是否购买成功
+                        self.buy_cnt[name] = self.buy_cnt[name] + 1
+                        log.info("分享的 %s 购买成功", name)
+
+                        self.wujiang_renkou_delta = 0
+                        if name in self.lv1_list_raw:
+                            self.wujiang_renkou_delta = 1
+                        if name in self.lv2_list_raw:
+                            self.wujiang_renkou_delta = 2
+                        if name in self.lv3_list_raw:
+                            self.wujiang_renkou_delta = 3
+                        self.all_tiaozhan()
+
+                        if self.check_more('shengji', 2):
+                            self.dict_lv[name] = int(self.dict_lv[name]) + 1
+                            log.info("武将 %s 升级了,当前等级:%s!", name, self.dict_lv[name])
+                            self.click(1)
+                            self.get_screen()
+                            if self.check('shengji', 400, 1500, 600, 1080):
+                                self.dict_lv[name] = int(self.dict_lv[name]) + 1
+                                log.info("武将 %s 升级了,当前等级:%s!", name, self.dict_lv[name])
+                                self.click()
+                            continue
+                        try:
+                            tmp_pos_idx = self.dict_pos_use[name]
+                            log.info("武将放置到 %s 位置", tmp_pos_idx)
+                            log.info("ref_abs_pos_x:%d ,ref_abs_pos_y:%d", self.ref_abs_pos_x,
+                                     self.ref_abs_pos_y)
+
+                            self.drag_quick(self.abs_pos[int(tmp_pos_idx)])
+
+                            timeout = 3
+                            time.sleep(2)
+
+                            while timeout:
+                                self.get_screen()
+                                self.all_tiaozhan()
+                                self.get_screen()
+                                if self.check_wujiang_bottom(name):
+                                    self.drag_safe(self.abs_pos[int(tmp_pos_idx)])
+                                    log.info("为什么会进来呢")
+
+                                else:
+                                    log.info('拖武将失败次数:%d', 3 - timeout)
+                                    break
+                                timeout = timeout - 1
+                            self.renkou_cur = self.renkou_cur + self.wujiang_renkou_delta
+                        except:
+                            log.info("字典里没这个武将 按顺序从0摆放")
+                        break
+                else:
+                    self.yincang_D_pai()
+                    break

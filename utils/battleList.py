@@ -15,7 +15,7 @@ class BattleList(MapPosition):
                              'honghaier', 'dongzhuo', 'leigong', 'simazhao']
         self.lv3_list_raw = ['nvwa', 'mozi', 'lishimin', 'zhouyu', 'zhugeliang', 'pangu', 'sunwukong', 'xiangyu',
                              'caocao', \
-                             'zhaoyun', 'lvbu', 'hanxin', 'wuzetian', 'guanyu', 'simayi', 'daozu', 'change',
+                             'zhaoyun', 'lvbu', 'hanxin', 'wuzetian', 'guanyu', 'simayi', 'daozu', 'change', 'tianpengyuanshuai',
                              ]
 
         self.wujiang_all_list=[]

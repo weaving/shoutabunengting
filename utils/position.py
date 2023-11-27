@@ -1,6 +1,7 @@
 from utils.log import log
 from utils.wujiang import WuJiang
 import time
+
 class MapPosition(WuJiang):
 # class MapPosition():
 
@@ -153,6 +154,7 @@ class MapPosition(WuJiang):
 
     def ref_update(self):
 
+
         ref_updata_max = 40
         self.ref_update_flag = 0
         self.location_left_right = 0
@@ -160,6 +162,11 @@ class MapPosition(WuJiang):
             print("基准更新中")
 
             self.get_screen()
+            if self.check("guanbi", 550, 750, 500, 900):
+                self.location_x = self.location_x + 30
+                self.location_y = self.location_y + 5
+                self.click()
+
             if self.check("jizhun_right2", threshold=0.97) == 1 and self.ref_update_flag == 0:
                 print(self.check("jizhun_right2", threshold=0.97))
                 self.ref_abs_pos_x = self.location_x
@@ -199,6 +206,7 @@ class MapPosition(WuJiang):
             #     self.update_abs_pos()
             #     break
             time.sleep(0.5)
+            self.yincang_D_pai(1)
             if ref_updata_max == 0:
                 break
             ref_updata_max = ref_updata_max - 1
@@ -213,7 +221,8 @@ class MapPosition(WuJiang):
             self.get_screen()
             if self.check("yincang"):  # 我要买武将了么 你跑出来 我很烦
                 self.click()
-            if self.check("wozhidaole"):
+            if self.check('wozhidaole', 0, 700, 700, 1080):
+                self.location_y = self.location_y + 30
                 self.click()
             if self.check("guanbi", 550, 750, 500, 900):
                 self.location_x = self.location_x + 30
@@ -230,7 +239,8 @@ class MapPosition(WuJiang):
             log.info("self.location_x:%d",self.location_x)
             log.info("self.location_y:%d",self.location_y)
             #删除
-            if self.check("wozhidaole"):
+            if self.check('wozhidaole', 0, 700, 700, 1080):
+                self.location_y = self.location_y + 30
                 self.click()
             if self.check("chushouyingxiong", 100, 400, 800, 1000):
                 log.info("删除武将成功 位置 %d", pos_idx)
@@ -258,7 +268,3 @@ class MapPosition(WuJiang):
             self.dict_lv[self.lv2_list_raw[i]] = 1
         self.pos_index = 0
 
-    def yincang_D_pai(self):
-        self.location_x = 1746
-        self.location_y = 219
-        self.click(0.5)  # 这里点一下隐藏购买武将界面

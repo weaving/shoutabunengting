@@ -1,25 +1,63 @@
 database:
-  lv1_list : [muludawang,  niumowang, huangzhong, machao, chenping, ]
-  lv2_list : [ xiaohe,liubang, zhurongfuren,]
+  lv1_list : [muludawang,  niumowang, diaochan,  chenping, ]
+  lv2_list : [ xiaohe,sunce,zhurongfuren,liubang, ]
   lv3_list : [ lishimin, wuzetian,hanxin, ]
-  postion : [ 
-            muludawang: 0,
-            xiaohe: 1,
-            hanxin: 2,
-            niumowang: 3,
-            huangzhong: 4,
-            machao: 5,
-            chenping: 6,
-            liubang: 7,
-            zhurongfuren: 8,   
-            lishimin: 9,
-            wuzetian: 10,
-       ]
-  xinyuan_list : [ lishimin, xiaohe,muludawang, ]
-  tequan : 1
-  refresh_max : [6,6,6,6,10,10,10,40,50,9999,9999]
+  postion : { 
+            'muludawang' : '0',
+            'hanxin' : '1',
+            'xiaohe' : '2',
+            'wuzetian' : '3',
+            'lishimin' : '4',
+            'diaochan' : '5',
+            'liubang' : '6',
+            'sunce': '7',
+            'niumowang' : '8',
+            'zhurongfuren' : '29',
+            'chenping' : '30',
 
+       }
+  xinyuan_list : [ xiaohe,muludawang,lishimin,wuzetian,hanxin ]
+  qianghua_list : [mianfeishuaxin, yingxiongqianghua,zhaohuanzhihun,zhongzhichengcheng,]
+
+  lishimin_wuqi : [duochonggong,duolingqiang,pingtianguan,yumofu,kongmozhu,daodejing,kaishanfu,yumochui,baojunfu,lingshoudan,]
+  hanxin_wuqi :  [feiyanzhu,jinshejian,kaitianfu,daodejing,kaishanfu,yumochui,baojunfu,lingshoudan,yumofu,kongmozhu]
+  wuzetian_wuqi : [fulongsuo, hanbingzhou,kunxianshu,xiangmoshu,xiangmobaozhang ,qiankunshan,miaofabaodian,xingtianfu]
+  diaochan_wuqi : [fulongsuo, ]
+  muludawang_wuqi : [fulongsuo, yumobian, yangxinfa]
+  liubang_wuqi : [qumoling, yangxinfa]
+  xiaohe_wuqi : [dawangfu,zhinangjing,shishenling,yumochui]
+  zhurongfuren_wuqi : [pojianujian,shangjunshu]
+
+  tequan : 0
+  ziyuan : 0
+  touxiang : 1
+  refresh_max : [6,6,6,6,10,10,10,40,50,9999,9999]
+  AppID : 'refer to README'
+  APIKey : 'refer to README'
+  SecretKey : 'refer to README'
  
 logging:
   level: info
   filename: myapp.log
+info:
+  wuqi_all : [ chailangshou, chuanxinjian, chumoshu, dawangfu, duochonggong, duolingqiang,
+              feihuadan, fengleibian, fulongsuo, fuxiqin, ganjiang, gongshouzhangu, guiguzi,
+              haimohaojiao, hairenchui, hanbingzhou, hongyijupao, huifengzhenfa, huimoxinfa,
+              huogongshu, jifengjian, jinshejian, jubaopeng, kaishanchui, kaitianfu, kongdongyin,
+              kongmozhu, kuangfengfu, kunxianshu, lihunchui, lingshoudan, lingyuanhaojiao, longlin,
+              lvshichunqiu, lvxing, miaofabaodian, mingdaotianzhu, mingleifazhang, moxie, nuguijian,
+              pingtianguan, pojianujian, pozhen, qiankunfu, qiankunshan, qumoling, sanshiliuji,
+              shamodao, shangjunshu, shaweibang, shishenling, suijinchui, sunzibingfa, taia, tianfajian,
+              tianhuhaojiao, tulong, tumozhoufa, wolongshan, wudelv, wuduhulu, wuguihulu, xiangmobaozhang,
+              xiangmoshu, xingtianfu, yangxinfa, yangxinshi, yinshejian, yinyangbian, yuanlingjian, yuchang,
+              yumobian, yumochui, yumofu, zhinangjing,baojunfu,daodejing,feiyanzhu,]
+  lv1_list_all : [huangyueying, shaseng, muludawang, zhubajie, machao, chenping, dayu,
+                                 tieshangongzhu, liuchan, xuanwu, zhuque, liubei, sunshangxiang,
+                                 niumowang, luban, liyuanfang, donghuangtaiyi, yuanshao, zhuangzhou,
+                                                                         diaochan, sunjian, gongsunzan, huangzhong, jinjiaodawang, yinjiaodawang,]
+
+  lv2_list_all : [liubang, baihu, baiqi, dianmu, zhurongfuren, xiaohe, tangseng, qinglong,                                  baigujing, sunce, lvbuwei, sunquan, fanzeng, direnjie, lixin, zhangfei,
+                                 honghaier, dongzhuo, leigong, simazhao]
+  lv3_list_all : [nvwa, mozi, lishimin, zhouyu, zhugeliang, pangu, sunwukong, xiangyu,
+                                 caocao,  zhaoyun, lvbu, hanxin, wuzetian, guanyu, simayi, daozu, change, tianpengyuanshuai,
+                                 ]
