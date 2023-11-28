@@ -3,7 +3,8 @@
 
 由于游戏进度问题，目前只开发到第一章，后续会开发更多
 
-
+python311 安装:
+https://zhuanlan.zhihu.com/p/624750961?utm_id=0
 
 
 免责声明
