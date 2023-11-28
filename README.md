@@ -11,8 +11,10 @@
    
 python311 安装:
 https://zhuanlan.zhihu.com/p/624750961?utm_id=0
+
 pycharm 2021安装:
 https://www.cnblogs.com/zhangxiaowai/p/12681270.html
+
 验证码自动识别安装:
 https://zhuanlan.zhihu.com/p/392129553
 
